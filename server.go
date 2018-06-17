@@ -17,7 +17,7 @@ func main() {
 	r.POST("/todo", tc.CreateTodo)
 	r.DELETE("/todo/:id", tc.DeleteTodo)
 
-	err := http.ListenAndServe("milka.zpn.intel.com:8080", r)
+	err := http.ListenAndServe("localhost:8080", r)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}

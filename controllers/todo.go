@@ -12,11 +12,16 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type (
-	TodoController struct {
-		session *mgo.Session
-	}
-)
+type TodoRestApi interface {
+	GetTodo(http.ResponseWriter, *http.Request, httprouter.Params)
+	GetTodoList(http.ResponseWriter, *http.Request, httprouter.Params)
+	CreateTodo(http.ResponseWriter, *http.Request, httprouter.Params)
+	DeleteTodo(http.ResponseWriter, *http.Request, httprouter.Params)
+}
+
+type TodoController struct {
+	session *mgo.Session
+}
 
 func NewTodoController(s *mgo.Session) *TodoController {
 	return &TodoController{s}
@@ -57,7 +62,7 @@ func (tc TodoController) CreateTodo(w http.ResponseWriter, r *http.Request, p ht
 	json.NewDecoder(r.Body).Decode(&todo)
 	todo.Id = bson.NewObjectId()
 	tc.session.DB(utils.DBNAME).C(utils.COLLEC).Insert(todo)
-	fmtOutput(w, 201, todo)
+	fmtOutput(w, 200, todo)
 }
 
 func (tc TodoController) DeleteTodo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
