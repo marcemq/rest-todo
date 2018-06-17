@@ -7,8 +7,10 @@ const (
 	COLLEC = "todos"
 )
 
+var dburl = "mongodb://localhost"
+
 func GetSession() *mgo.Session {
-	s, err := mgo.Dial("mongodb://localhost")
+	s, err := mgo.Dial(dburl)
 	if err != nil {
 		panic(err)
 	}
