@@ -1,18 +1,22 @@
 package utils
 
-import "gopkg.in/mgo.v2"
+import (
+	"gopkg.in/mgo.v2"
+	"log"
+)
 
 const (
 	DBNAME = "rest_todo"
 	COLLEC = "todos"
 )
 
-var dburl = "mongodb://localhost"
+var DBurl = "mongodb://localhost"
 
-func GetSession() *mgo.Session {
-	s, err := mgo.Dial(dburl)
+func GetSession(url string) *mgo.Session {
+	s, err := mgo.Dial(url)
 	if err != nil {
-		panic(err)
+		log.Println("Could not connect to mongo: ", err.Error())
+		return nil
 	}
 	return s
 }
