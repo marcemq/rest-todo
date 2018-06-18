@@ -11,7 +11,10 @@ import (
 
 func main() {
 	r := httprouter.New()
-	tc := controllers.NewTodoController(utils.GetSession())
+	s := utils.GetSession(utils.DBurl)
+	tc := controllers.NewTodoController(s)
+	defer s.Close()
+
 	r.GET("/todo/:id", tc.GetTodo)
 	r.GET("/list", tc.GetTodoList)
 	r.POST("/todo", tc.CreateTodo)
