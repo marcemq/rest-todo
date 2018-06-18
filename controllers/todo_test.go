@@ -25,7 +25,7 @@ func TestCreateTodo(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			tctrl := NewTodoController(utils.GetSession())
+			tctrl := NewTodoController(utils.GetSession(utils.DBurl))
 			router := httprouter.New()
 			router.POST("/todo", tctrl.CreateTodo)
 
@@ -55,6 +55,49 @@ func TestCreateTodo(t *testing.T) {
 			t.Log(strbody)
 			if !strings.Contains(strbody, tc.todo) {
 				t.Fatalf("Task:%v not in server response, got %v", tc.todo, strbody)
+			}
+		})
+	}
+}
+
+func TestGetTodoList(t *testing.T) {
+	tt := []struct {
+		name        string
+		expHttpCode int
+	}{
+		{name: "List all content", expHttpCode: 200},
+		//{name: "List err", expHttpCode: 404},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			tctrl := NewTodoController(utils.GetSession(utils.DBurl))
+			router := httprouter.New()
+			router.GET("/list", tctrl.GetTodoList)
+
+			todourl := "http://" + SRVADDR + "/list"
+			req, err := http.NewRequest("GET", todourl, nil)
+			req.Header.Set("Content-Type", "application/json")
+			if err != nil {
+				t.Fatalf("Could not create GET request: %v", err)
+			}
+
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+			if status := rec.Code; status != tc.expHttpCode {
+				t.Fatalf("Wrong request status, expected %v:got %v", tc.expHttpCode, status)
+			}
+
+			resp := rec.Result()
+			defer resp.Body.Close()
+
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("Could not read body response: %v", err)
+			}
+			strbody := string(bytes.TrimSpace(body))
+			if len(strbody) == 0 {
+				t.Fatalf("Could not get TODO list")
 			}
 		})
 	}
