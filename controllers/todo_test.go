@@ -10,7 +10,9 @@ import (
 	"testing"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/marcemq/rest-todo/models"
 	"github.com/marcemq/rest-todo/utils"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func TestCreateTodo(t *testing.T) {
@@ -98,6 +100,53 @@ func TestGetTodoList(t *testing.T) {
 			strbody := string(bytes.TrimSpace(body))
 			if len(strbody) == 0 {
 				t.Fatalf("Could not get TODO list")
+			}
+		})
+	}
+}
+
+func TestDeleteTodo(t *testing.T) {
+	tt := []struct {
+		name        string
+		newTodo     string
+		expHttpCode int
+	}{
+		{name: "Secret TODO", newTodo: "My secret TODO to be delete", expHttpCode: 200},
+		{name: "Empty TODO", newTodo: "", expHttpCode: 400},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			tctrl := NewTodoController(utils.GetSession(utils.DBurl))
+			router := httprouter.New()
+			router.POST("/todo", tctrl.CreateTodo)
+
+			data := map[string]string{"todo": tc.newTodo}
+			dataj, _ := json.Marshal(data)
+			todourl := "http://" + SRVADDR + "/todo"
+			req, err := http.NewRequest("POST", todourl, bytes.NewBuffer(dataj))
+			req.Header.Set("Content-Type", "application/json")
+			if err != nil {
+				t.Fatalf("Could not create POST request: %v", err)
+			}
+
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+			tododb := models.Todo{}
+			json.NewDecoder(rec.Body).Decode(&tododb)
+			t.Log(tododb.Id)
+			todoId := bson.ObjectId(tododb.Id).Hex()
+			router.DELETE("/todo/:id", tctrl.DeleteTodo)
+			todourl = "http://" + SRVADDR + "/todo/:id"
+			req, err = http.NewRequest("DELETE", todourl, strings.NewReader(todoId))
+			req.Header.Set("Content-Type", "application/json")
+			if err != nil {
+				t.Fatalf("Could not create DELETE request: %v", err)
+			}
+
+			rec = httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+			if status := rec.Code; status != tc.expHttpCode {
+				t.Fatalf("Wrong request status, expected %v:got %v", tc.expHttpCode, status)
 			}
 		})
 	}
