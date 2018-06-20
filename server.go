@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/marcemq/rest-todo/controllers"
@@ -12,7 +14,8 @@ import (
 func main() {
 	r := httprouter.New()
 	s := utils.GetSession(utils.DBurl)
-	if tc, err := controllers.NewTodoController(s); err != nil {
+	tc, err := controllers.NewTodoController(s)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error found: %v\n", err)
 		os.Exit(1)
 	}
@@ -23,7 +26,7 @@ func main() {
 	r.POST("/todo", tc.CreateTodo)
 	r.DELETE("/todo/:id", tc.DeleteTodo)
 
-	err := http.ListenAndServe(controllers.SRVADDR, r)
+	err = http.ListenAndServe(controllers.SRVADDR, r)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
