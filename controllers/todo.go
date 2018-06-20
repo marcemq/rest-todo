@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -25,8 +26,11 @@ type TodoController struct {
 	session *mgo.Session
 }
 
-func NewTodoController(s *mgo.Session) *TodoController {
-	return &TodoController{s}
+func NewTodoController(s *mgo.Session) (*TodoController, error) {
+	if s == nil {
+		return nil, errors.New(fmt.Sprintf("Can't work w/o valid mgo db session!"))
+	}
+	return &TodoController{s}, nil
 }
 
 func fmtOutput(w http.ResponseWriter, code int, todo ...models.Todo) {

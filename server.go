@@ -12,7 +12,10 @@ import (
 func main() {
 	r := httprouter.New()
 	s := utils.GetSession(utils.DBurl)
-	tc := controllers.NewTodoController(s)
+	if tc, err := controllers.NewTodoController(s); err != nil {
+		fmt.Fprintf(os.Stderr, "Error found: %v\n", err)
+		os.Exit(1)
+	}
 	defer s.Close()
 
 	r.GET("/todo/:id", tc.GetTodo)
